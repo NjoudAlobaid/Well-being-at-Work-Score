@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WWS Dashboard | Tawazon</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg: #F8F9FA;
+      --card: #FFFFFF;
+      --text: #2D3748;
+      --text-head: #1A202C;
+      --muted: #718096;
+      --border: #E2E8F0;
+      
+      --primary: #582C83; 
+      --secondary: #0070CD; 
+      
+      --status-bad: #E53E3E;
+      --status-good: #D69E2E;
+      --status-ideal: #38A169;
+
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --radius: 16px;
+      --font-main: 'Tajawal', sans-serif;
+    }
+
+    *{box-sizing:border-box}
+    
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family: var(--font-main);
+      line-height:1.6;
+    }
+
+    .wrap{max-width:1400px; margin:0 auto; padding:20px;}
+    
+    .header{
+      text-align: center; margin-bottom: 30px; padding-bottom: 20px;
+      border-bottom: 2px solid var(--border);
+    }
+    .header h1{ font-size: 32px; font-weight: 900; color: var(--primary); margin: 0 0 5px 0; }
+    .header h2{ font-size: 18px; font-weight: 500; color: var(--secondary); margin: 0; direction: ltr; font-family: sans-serif; }
+
+    .tabs{
+      display:flex; justify-content: center; gap: 10px; margin-bottom: 25px;
+      background: #fff; padding: 6px; border-radius: 99px; width: fit-content;
+      margin-left: auto; margin-right: auto; box-shadow: var(--shadow); border: 1px solid var(--border);
+    }
+    .tab{
+      padding: 10px 30px; border-radius: 99px; font-weight: 700; cursor: pointer; color: var(--muted); transition: all 0.2s ease; font-size: 14px;
+    }
+    .tab:hover{ background: #F8FAFC; color: var(--text-head); }
+    .tab.active{ background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(88, 44, 131, 0.3); }
+
+    .grid-container{ display: grid; grid-template-columns: 420px 1fr; gap: 20px; align-items: start; }
+    .grid-compare-layout{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+    .full-width{ grid-column: 1 / -1; }
+    .grid-dashboard{ grid-template-columns: 1fr 350px; } 
+    
+    @media (max-width: 1000px){
+      .grid-container, .grid-compare-layout, .grid-dashboard{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: var(--card); border-radius: var(--radius); padding: 24px;
+      box-shadow: var(--shadow); border: 1px solid #fff;
+    }
+    .card h3{
+      margin: 0 0 15px 0; font-size: 16px; font-weight: 800; color: var(--primary);
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px dashed var(--border); padding-bottom: 10px;
+    }
+
+    select, input[type="text"]{
+      width: 100%; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid var(--border); background: #F7FAFC;
+      font-family: var(--font-main); font-weight: 600; color: var(--text-head);
+      outline: none; margin-bottom: 15px;
+    }
+    select:focus, input:focus{ border-color: var(--primary); background: #fff; }
+
+    .score-container{ text-align: center; padding: 20px 0; margin-bottom: 20px; }
+    .gauge-wrapper{ position: relative; width: 160px; height: 160px; margin: 0 auto; }
+    .score-value{
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 38px; font-weight: 900; color: var(--text-head);
+    }
+    .score-status{
+      margin-top: 15px; font-weight: 800; font-size: 16px; padding: 8px 20px;
+      border-radius: 8px; display: inline-block; color: #fff;
+    }
+    
+    .decision-box{
+      background: #EBF8FF; border-right: 4px solid var(--secondary); padding: 15px;
+      border-radius: 4px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; color: #2C5282;
+    }
+    
+    .axes-list{ display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .axis-item{
+      display: flex; justify-content: space-between; align-items: center;
+      background: #fff; border-bottom: 1px solid #EDF2F7; padding: 8px 0; font-size: 13px; font-weight: 600;
+    }
+
+    .report-types{ display: flex; gap: 10px; margin-bottom: 20px; }
+    .rt-btn{
+      flex: 1; text-align: center; padding: 12px; border: 1px solid var(--border);
+      background: #fff; border-radius: 8px; cursor: pointer; transition: all 0.2s;
+    }
+    .rt-btn.active{ border-color: var(--primary); background: #FAF5FF; color: var(--primary); }
+    .rt-btn b{ display: block; font-size: 14px; margin-bottom: 2px; }
+
+    table{ width: 100%; border-collapse: collapse; font-size: 13px; }
+    th{ text-align: right; color: var(--muted); font-weight: 600; padding: 12px; border-bottom: 1px solid var(--border); background: #F7FAFC; }
+    td{ padding: 12px; border-bottom: 1px solid #EDF2F7; color: var(--text-head); font-weight: 600; }
+
+    .chart-box{ 
+      margin-top: 10px; padding: 10px; border-radius: 12px; 
+      background: #fff; border: 1px solid #F7FAFC; 
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; /* يضمن عدم خروج الرسم */
+    }
+    svg{ overflow: visible; width: 100%; height: auto; display: block; }
+    .hidden{ display: none; }
+    .filters-row{ display: flex; gap: 10px; margin-bottom: 15px; }
+
+  </style>
+</head>
+<body>
+
+  <div class="wrap">
+    
+    <div class="header">
+      <h1>نظام تقييم بيئة العمل الشامل</h1>
+      <h2>Well-being at Work Score – WWS</h2>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('results')">النتائج</div>
+      <div class="tab" onclick="switchTab('compare')">المقارنة</div>
+      <div class="tab" onclick="switchTab('dashboard')">لوحة المعلومات العامة</div>
+    </div>
+
+    <!-- TAB 1: RESULTS -->
+    <div id="tab-results" class="grid-container">
+      
+      <!-- Right Panel -->
+      <div class="card">
+        <label style="font-size:12px; font-weight:700; margin-bottom:5px; display:block; color:var(--muted)">اختر الجهة:</label>
+        <select id="selEntityRes" onchange="renderResults()"></select>
+
+        <div class="score-container">
+          <div class="gauge-wrapper">
+            <svg viewBox="0 0 100 100">
+              <path d="M 10 90 A 45 45 0 1 1 90 90" fill="none" stroke="#EDF2F7" stroke-width="10" stroke-linecap="round"/>
+              <path id="gaugePath" d="M 10 90 A 45 45 0 1 1 90 90" fill="none" stroke="var(--status-bad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="220" stroke-dashoffset="220" style="transition: stroke-dashoffset 1s ease, stroke .3s"/>
+            </svg>
+            <div class="score-value" id="scoreVal">0</div>
+          </div>
+          <div class="score-status" id="scoreStatus">--</div>
+        </div>
+
+        <div class="decision-box">
+          <strong>القرار التنفيذي:</strong>
+          <span id="decisionTxt">--</span>
+        </div>
+
+        <div class="axes-list" id="axesList"></div>
+        
+        <div style="background:#FFF5F5; border:1px solid #FED7D7; padding:15px; border-radius:8px;">
+          <h4 style="margin:0 0 10px; font-size:13px; color:#C53030">أبرز المخاطر المحتملة:</h4>
+          <div id="risksList" style="font-size:12px; color:#C53030; font-weight:600"></div>
+        </div>
+      </div>
+
+      <!-- Left Panel -->
+      <div class="card">
+        <h3>خريطة المحاور <span style="font-size:12px; font-weight:500; color:var(--muted)">الأداء التفصيلي</span></h3>
+        <!-- Increased ViewBox Height to fix clipping -->
+        <div class="chart-box" style="height:400px;">
+          <svg id="radarChart" viewBox="0 0 550 400"></svg>
+        </div>
+
+        <h3 style="margin-top:30px">أبرز التوصيات <span style="font-size:12px; font-weight:500; color:var(--muted)">حسب الأولوية</span></h3>
+        <div id="recsList"></div>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: COMPARE -->
+    <div id="tab-compare" class="grid-compare-layout hidden">
+      
+      <div class="card full-width" style="padding:15px; display:flex; align-items:center; justify-content:center; gap:20px; background:#F7FAFC;">
+        <div style="width:300px">
+          <label style="font-size:11px; color:var(--muted)">الجهة الأولى (A)</label>
+          <select id="compA" onchange="renderCompare()" style="margin:0"></select>
+        </div>
+        <div style="font-weight:900; color:var(--primary); font-size:20px">VS</div>
+        <div style="width:300px">
+          <label style="font-size:11px; color:var(--muted)">الجهة الثانية (B)</label>
+          <select id="compB" onchange="renderCompare()" style="margin:0"></select>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>المقارنة المرجعية (Radar)</h3>
+        <div class="chart-box" style="height:400px;">
+          <svg id="compRadar" viewBox="0 0 550 400"></svg>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>تحليل الفجوات (Gap Analysis)</h3>
+        <div class="chart-box" style="height:400px;">
+          <svg id="gapLineChart" viewBox="0 0 550 350"></svg>
+        </div>
+      </div>
+
+      <div class="card full-width">
+        <h3>جدول المقارنة التفصيلي</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>المحور</th>
+              <th id="thA">A</th>
+              <th id="thB">B</th>
+              <th>الفجوة</th>
+            </tr>
+          </thead>
+          <tbody id="compTableBody"></tbody>
+        </table>
+        <div class="decision-box" style="margin-top:20px; background:#F7FAFC; border-color:#CBD5E0; color:var(--text)">
+          <strong>خلاصة المقارنة:</strong>
+          <span id="compSummary">--</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 3: DASHBOARD -->
+    <div id="tab-dashboard" class="grid-dashboard grid-container hidden">
+      
+      <div class="card">
+        <div class="report-types">
+          <div class="rt-btn active" onclick="setDashType('general', this)">
+            <b>تقرير عام</b><span>ترتيب الجهات</span>
+          </div>
+          <div class="rt-btn" onclick="setDashType('sector', this)">
+            <b>تقرير قطاعي</b><span>أداء القطاعات</span>
+          </div>
+          <div class="rt-btn" onclick="setDashType('trend', this)">
+            <b>تقرير زمني</b><span>تطور الأداء</span>
+          </div>
+        </div>
+
+        <div class="filters-row">
+          <select id="fltSector" onchange="renderDash()"><option value="all">القطاع: الكل</option></select>
+          <select id="fltRegion" onchange="renderDash()"><option value="all">المنطقة: الكل</option></select>
+          <select id="fltSize" onchange="renderDash()"><option value="all">الحجم: الكل</option></select>
+        </div>
+
+        <h3 id="mainChartTitle">ترتيب الجهات (الأعلى أداءً)</h3>
+        <!-- Adjusted padding for vertical bars -->
+        <div class="chart-box" style="height:450px; align-items:flex-end; padding-bottom:50px;">
+          <svg id="mainDashChart" viewBox="0 0 750 400"></svg>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>أكثر المحاور انخفاضاً <span style="font-size:12px; font-weight:500; color:var(--muted)">Top Gaps</span></h3>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:15px">توضح المحاور التي تحتاج لتحسين عاجل.</p>
+        <div class="chart-box" style="height:450px;">
+          <svg id="lowestAxesChart" viewBox="0 0 350 450"></svg>
+        </div>
+        
+        <div style="margin-top:20px; border-top:1px dashed #E2E8F0; padding-top:10px;">
+          <label style="font-size:12px; color:var(--muted)">قائمة الجهات:</label>
+          <div style="height:150px; overflow-y:auto; border:1px solid #F1F5F9; border-radius:8px; margin-top:5px;">
+            <table style="font-size:11px;">
+              <tbody id="dashSideTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+<script>
+const AXES = [
+  { id: "lead", name: "دعم القيادة والثقافة التنظيمية", color: "#805AD5", max: 25 },
+  { id: "safe", name: "الأمان في بيئة العمل", color: "#E53E3E", max: 10 },
+  { id: "ohs",  name: "بيئة العمل والسلامة المهنية", color: "#DD6B20", max: 15 },
+  { id: "phys", name: "الصحة البدنية", color: "#319795", max: 30 },
+  { id: "ment", name: "الصحة النفسية", color: "#3182CE", max: 20 }
+];
+
+const DATA = [
+  { 
+    id: "A", name: "Company A", sector: "Technology", region: "Riyadh", size: "Medium", 
+    scores: [8, 3, 15, 10, 5], total: 41,
+    decision: "الإصلاح الفوري: سياسات منع التحرش، معايير السلامة الأساسية، وتوفير خط مساعدة نفسي.",
+    risks: ["ارتفاع دوران الموظفين 35%", "انخفاض الإنتاجية 40%", "زيادة الإرهاق 30%"],
+    recs: [{prio:"عاجل", txt:"سياسات صارمة للحد من التنمر"}, {prio:"عاجل", txt:"دعم نفسي داخل الشركة"}],
+    history: [35, 38, 41] 
+  },
+  { 
+    id: "B", name: "Company B", sector: "Healthcare", region: "Jeddah", size: "Large", 
+    scores: [21, 6, 10, 23, 18], total: 78,
+    decision: "الحفاظ على المكتسبات، تعزيز قنوات الإبلاغ الآمن، وتوسيع البرامج لتشمل العائلات.",
+    risks: ["ضعف نسبي في محور الأمان (6/10)", "تحديات استدامة البرامج"],
+    recs: [{prio:"تحسين", txt:"تعزيز الإبلاغ الآمن"}, {prio:"تطوير", txt:"برامج الفحص المبكر"}],
+    history: [70, 75, 78]
+  },
+  { id: "C", name: "Hospital Z", sector: "Healthcare", region: "Riyadh", size: "Large", scores: [20, 9, 14, 25, 16], total: 84, history: [80, 82, 84] },
+  { id: "D", name: "Factory X", sector: "Industrial", region: "Eastern", size: "Large", scores: [12, 5, 8, 15, 8], total: 48, history: [45, 46, 48] },
+  { id: "E", name: "Edu School Y", sector: "Education", region: "Jeddah", size: "Medium", scores: [18, 8, 12, 22, 14], total: 74, history: [60, 68, 74] },
+  { id: "F", name: "Bank K", sector: "Finance", region: "Riyadh", size: "Large", scores: [24, 9, 13, 28, 19], total: 93, history: [88, 90, 93] },
+];
+
+const getStatus = (score) => {
+  if(score < 60) return { text: "بيئة عمل غير صحية", color: "var(--status-bad)", bg: "#FED7D7" };
+  if(score < 80) return { text: "بيئة عمل صحية", color: "var(--status-good)", bg: "#FEEBC8" };
+  return { text: "بيئة عمل مثالية", color: "var(--status-ideal)", bg: "#C6F6D5" };
+};
+
+function init(){
+  const selRes = document.getElementById("selEntityRes");
+  const selA = document.getElementById("compA");
+  const selB = document.getElementById("compB");
+  
+  DATA.forEach(d => {
+    let opt = `<option value="${d.id}">${d.name}</option>`;
+    selRes.innerHTML += opt;
+    selA.innerHTML += opt;
+    selB.innerHTML += opt;
+  });
+  
+  selRes.value = "A"; selA.value = "A"; selB.value = "B";
+
+  const sectors = [...new Set(DATA.map(d=>d.sector))];
+  sectors.forEach(s => document.getElementById("fltSector").innerHTML += `<option value="${s}">${s}</option>`);
+
+  const regions = [...new Set(DATA.map(d=>d.region))];
+  regions.forEach(r => document.getElementById("fltRegion").innerHTML += `<option value="${r}">${r}</option>`);
+
+  const sizes = [...new Set(DATA.map(d=>d.size))];
+  sizes.forEach(s => document.getElementById("fltSize").innerHTML += `<option value="${s}">${s}</option>`);
+
+  renderResults();
+  renderCompare();
+  renderDash();
+}
+
+function switchTab(id){
+  document.querySelectorAll('.grid-container, .grid-compare-layout').forEach(el => el.classList.add('hidden'));
+  if(id === 'compare') document.getElementById('tab-compare').classList.remove('hidden');
+  else document.getElementById('tab-' + id).classList.remove('hidden');
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function renderResults(){
+  const id = document.getElementById("selEntityRes").value;
+  const ent = DATA.find(d => d.id === id);
+  const st = getStatus(ent.total);
+
+  document.getElementById("scoreVal").innerText = ent.total;
+  document.getElementById("scoreStatus").innerText = st.text;
+  document.getElementById("scoreStatus").style.backgroundColor = st.color;
+  document.getElementById("gaugePath").style.stroke = st.color;
+  document.getElementById("gaugePath").style.strokeDashoffset = 282 - (282 * ent.total / 100);
+  document.getElementById("decisionTxt").innerText = ent.decision || "--";
+
+  const list = document.getElementById("axesList");
+  list.innerHTML = "";
+  ent.scores.forEach((s, i) => {
+    list.innerHTML += `
+      <div class="axis-item">
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${AXES[i].color};margin-left:5px"></span>${AXES[i].name}</span>
+        <span style="font-weight:800; color:${AXES[i].color}">${s}/${AXES[i].max}</span>
+      </div>`;
+  });
+
+  const rList = document.getElementById("risksList");
+  rList.innerHTML = "";
+  (ent.risks || []).forEach(r => rList.innerHTML += `<div>• ${r}</div>`);
+
+  const recList = document.getElementById("recsList");
+  recList.innerHTML = "";
+  (ent.recs || []).forEach(r => {
+    recList.innerHTML += `
+      <div style="background:#FAFAFA; padding:10px; border-right:3px solid var(--primary); margin-bottom:5px; border-radius:4px;">
+        <span style="background:#2D3748; color:#fff; font-size:10px; padding:2px 6px; border-radius:4px;">${r.prio}</span>
+        <span style="font-size:12px; font-weight:700;">${r.txt}</span>
+      </div>`;
+  });
+
+  drawRadar("radarChart", [ent], 1);
+}
+
+function renderCompare(){
+  const idA = document.getElementById("compA").value;
+  const idB = document.getElementById("compB").value;
+  const entA = DATA.find(d => d.id === idA);
+  const entB = DATA.find(d => d.id === idB);
+
+  drawRadar("compRadar", [entA, entB], 0.9);
+  drawGapChart("gapLineChart", entA, entB);
+
+  const tbody = document.getElementById("compTableBody");
+  tbody.innerHTML = "";
+  document.getElementById("thA").innerText = entA.name;
+  document.getElementById("thB").innerText = entB.name;
+
+  let gapSum = 0;
+  entA.scores.forEach((sA, i) => {
+    const sB = entB.scores[i];
+    const diff = sB - sA;
+    gapSum += diff;
+    const color = diff > 0 ? "var(--status-ideal)" : (diff < 0 ? "var(--status-bad)" : "#718096");
+    tbody.innerHTML += `
+      <tr>
+        <td>${AXES[i].name}</td>
+        <td>${sA}</td>
+        <td>${sB}</td>
+        <td style="color:${color}; direction:ltr; text-align:right; font-weight:800">${diff > 0 ? "+" : ""}${diff}</td>
+      </tr>`;
+  });
+
+  document.getElementById("compSummary").innerText = gapSum > 0 ? 
+    `${entB.name} تتفوق بإجمالي (+${gapSum})` : 
+    `${entA.name} تتفوق بإجمالي (+${Math.abs(gapSum)})`;
+}
+
+let dashType = 'general';
+function setDashType(type, btn){
+  dashType = type;
+  document.querySelectorAll('.rt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDash();
+}
+
+function renderDash(){
+  const sec = document.getElementById("fltSector").value;
+  const reg = document.getElementById("fltRegion").value;
+  const sz  = document.getElementById("fltSize").value;
+  
+  let list = DATA.filter(d => {
+    if(sec !== "all" && d.sector !== sec) return false;
+    if(reg !== "all" && d.region !== reg) return false;
+    if(sz !== "all" && d.size !== sz) return false;
+    return true;
+  });
+
+  const svg = document.getElementById("mainDashChart");
+  const sideT = document.getElementById("dashSideTable");
+  sideT.innerHTML = "";
+
+  if(dashType === 'general'){
+    document.getElementById("mainChartTitle").innerText = "ترتيب الجهات (الأعلى إلى الأقل)";
+    list.sort((a,b) => b.total - a.total);
+    drawColumnChart(svg, list.map(d => ({ label: d.name, value: d.total, color: getStatus(d.total).color })));
+    list.forEach(d => sideT.innerHTML += `<tr><td>${d.name}</td><td><b>${d.total}</b></td></tr>`);
+  } 
+  else if (dashType === 'sector'){
+    document.getElementById("mainChartTitle").innerText = "متوسط أداء القطاعات";
+    const sectors = {};
+    list.forEach(d => {
+      if(!sectors[d.sector]) sectors[d.sector] = [];
+      sectors[d.sector].push(d.total);
+    });
+    const agg = Object.keys(sectors).map(k => {
+      const avg = sectors[k].reduce((a,b)=>a+b,0) / sectors[k].length;
+      return { label: k, value: Math.round(avg), color: "#582C83" };
+    }).sort((a,b)=>b.value - a.value);
+    
+    drawColumnChart(svg, agg);
+    agg.forEach(d => sideT.innerHTML += `<tr><td>${d.label}</td><td><b>${d.value}</b></td></tr>`);
+  }
+  else if (dashType === 'trend'){
+    document.getElementById("mainChartTitle").innerText = "تطور الأداء عبر الزمن (عينة)";
+    drawTrendChart(svg, list.slice(0, 3)); 
+    sideT.innerHTML = "<tr><td colspan='2'>يعرض الرسم تطور أداء أعلى 3 جهات في القائمة الحالية</td></tr>";
+  }
+
+  let axisAgg = AXES.map((ax, i) => {
+    let sumPct = 0;
+    list.forEach(d => sumPct += (d.scores[i] / ax.max));
+    return { name: ax.name, avgPct: list.length ? (sumPct / list.length) * 100 : 0, color: ax.color };
+  });
+  axisAgg.sort((a,b) => a.avgPct - b.avgPct);
+  drawLowestAxesChart("lowestAxesChart", axisAgg);
+}
+
+// SVG Drawing Functions
+
+function drawRadar(svgId, entities, scale){
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = "";
+  // Expanded ViewBox logic to prevent clipping
+  // cx, cy centered in 550x400
+  const cx = 275, cy = 180, r = 110 * scale;
+  
+  [0.2, 0.4, 0.6, 0.8, 1].forEach(p => {
+    const pts = AXES.map((ax, i) => {
+      const ang = (Math.PI * 2 * i / 5) - Math.PI/2;
+      return `${cx + r*p*Math.cos(ang)},${cy + r*p*Math.sin(ang)}`;
+    }).join(" ");
+    svg.innerHTML += `<polygon points="${pts}" fill="none" stroke="#E2E8F0" stroke-width="1"/>`;
+  });
+
+  AXES.forEach((ax, i) => {
+    const ang = (Math.PI * 2 * i / 5) - Math.PI/2;
+    // Push labels further out
+    const lx = cx + (r+40)*Math.cos(ang);
+    const ly = cy + (r+40)*Math.sin(ang);
+    const anchor = lx > cx ? "start" : (lx < cx ? "end" : "middle");
+    
+    const words = ax.name.split(" ");
+    const line1 = words.slice(0, Math.ceil(words.length/2)).join(" ");
+    const line2 = words.slice(Math.ceil(words.length/2)).join(" ");
+    
+    // Adjust label Y if at bottom (index 2 or 3 mostly) to avoid clipping
+    let yOffset = 0;
+    if(i === 2 || i === 3) yOffset = 5;
+
+    svg.innerHTML += `<text x="${lx}" y="${ly-5+yOffset}" text-anchor="${anchor}" font-size="11" fill="#4A5568" font-weight="700">${line1}</text>`;
+    if(line2) svg.innerHTML += `<text x="${lx}" y="${ly+8+yOffset}" text-anchor="${anchor}" font-size="11" fill="#4A5568" font-weight="700">${line2}</text>`;
+    
+    const x = cx + r*Math.cos(ang);
+    const y = cy + r*Math.sin(ang);
+    svg.innerHTML += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#CBD5E0" stroke-width="1"/>`;
+  });
+
+  entities.forEach((ent, idx) => {
+    const color = idx === 0 ? "#805AD5" : "#319795";
+    const pts = ent.scores.map((s, i) => {
+      const pct = s / AXES[i].max;
+      const ang = (Math.PI * 2 * i / 5) - Math.PI/2;
+      return `${cx + r*pct*Math.cos(ang)},${cy + r*pct*Math.sin(ang)}`;
+    }).join(" ");
+    svg.innerHTML += `<polygon points="${pts}" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="2"/>`;
+  });
+}
+
+function drawGapChart(svgId, entA, entB){
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = "";
+  const W = 550, H = 350, pad = 60;
+  
+  [0, 0.5, 1].forEach(p => {
+    const y = pad + (H - 2*pad) * (1-p);
+    svg.innerHTML += `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="#F7FAFC" stroke-width="1"/>`;
+  });
+
+  const step = (W - 2*pad) / (AXES.length - 1);
+  AXES.forEach((ax, i) => {
+    const x = pad + i*step;
+    const words = ax.name.split(" ");
+    // Multi-line support
+    svg.innerHTML += `<text x="${x}" y="${H-25}" text-anchor="middle" font-size="9" fill="#718096">${words[0]} ${words[1]||""}</text>`;
+    if(words[2]) svg.innerHTML += `<text x="${x}" y="${H-15}" text-anchor="middle" font-size="9" fill="#718096">${words.slice(2).join(" ")}</text>`;
+  });
+
+  const colorA = "#805AD5";
+  const colorB = "#319795";
+  
+  [entA, entB].forEach((ent, idx) => {
+    const color = idx === 0 ? colorA : colorB;
+    let d = "";
+    ent.scores.forEach((s, i) => {
+      const pct = s / AXES[i].max;
+      const x = pad + i*step;
+      const y = pad + (H - 2*pad) * (1 - pct);
+      d += (i===0 ? "M" : "L") + ` ${x} ${y}`;
+      svg.innerHTML += `<circle cx="${x}" cy="${y}" r="4" fill="#fff" stroke="${color}" stroke-width="2"/>`;
+    });
+    svg.innerHTML += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2"/>`;
+  });
+
+  // Legend
+  svg.innerHTML += `<rect x="${W-100}" y="20" width="10" height="10" fill="${colorA}"/>`;
+  svg.innerHTML += `<text x="${W-85}" y="28" font-size="10" fill="#555">${entA.name}</text>`;
+  svg.innerHTML += `<rect x="${W-100}" y="40" width="10" height="10" fill="${colorB}"/>`;
+  svg.innerHTML += `<text x="${W-85}" y="48" font-size="10" fill="#555">${entB.name}</text>`;
+}
+
+function drawColumnChart(svg, data){
+  svg.innerHTML = "";
+  // Increased height in CSS and ViewBox
+  const W = 750, H = 400;
+  const padL = 50, padB = 90; // Large bottom padding for text
+  const padT = 40; // Top padding to prevent clipping
+  const availW = W - padL - 20;
+  const colW = Math.min(50, (availW / data.length) - 15);
+  
+  data.forEach((d, i) => {
+    const barHeight = (d.value / 100) * (H - padB - padT);
+    const x = padL + i * (availW / data.length) + 15;
+    const y = H - padB - barHeight;
+    
+    svg.innerHTML += `<rect x="${x}" y="${y}" width="${colW}" height="${barHeight}" fill="${d.color}" rx="4"/>`;
+    svg.innerHTML += `<text x="${x + colW/2}" y="${y-5}" text-anchor="middle" font-size="11" font-weight="700" fill="#2D3748">${d.value}</text>`;
+    // Rotated Label
+    svg.innerHTML += `<text x="${x + colW/2}" y="${H-padB+15}" text-anchor="end" font-size="11" fill="#4A5568" transform="rotate(-45, ${x + colW/2}, ${H-padB+15})">${d.label}</text>`;
+  });
+}
+
+function drawTrendChart(svg, list){
+  svg.innerHTML = "";
+  const W = 750, H = 400, pad = 50;
+  const colors = ["#805AD5", "#319795", "#DD6B20"];
+  
+  [0, 50, 100].forEach(v => {
+    const y = H - pad - (v/100)*(H - 2*pad);
+    svg.innerHTML += `<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="#F0F0F0"/>`;
+    svg.innerHTML += `<text x="${pad-10}" y="${y+4}" text-anchor="end" font-size="10">${v}</text>`;
+  });
+  
+  const step = (W - 2*pad) / 2;
+  const labels = ["Q1", "Q2", "Q3"];
+  labels.forEach((l, i) => svg.innerHTML += `<text x="${pad + i*step}" y="${H-10}" text-anchor="middle" font-size="11">${l}</text>`);
+
+  list.forEach((ent, idx) => {
+    const hist = ent.history || [ent.total, ent.total, ent.total];
+    let d = "";
+    hist.forEach((val, i) => {
+      const x = pad + i*step;
+      const y = H - pad - (val/100)*(H - 2*pad);
+      d += (i===0 ? "M" : "L") + ` ${x} ${y}`;
+      svg.innerHTML += `<circle cx="${x}" cy="${y}" r="4" fill="#fff" stroke="${colors[idx]}" stroke-width="2"/>`;
+    });
+    svg.innerHTML += `<path d="${d}" fill="none" stroke="${colors[idx]}" stroke-width="2"/>`;
+    svg.innerHTML += `<text x="${W-100}" y="${30 + idx*15}" font-size="11" fill="${colors[idx]}">${ent.name}</text>`;
+  });
+}
+
+function drawLowestAxesChart(svgId, aggData){
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = "";
+  const W = 350, H = 450;
+  const labelSpace = 130; // Space reserved for text on right
+  const barStart = 10;
+  const maxBarW = W - labelSpace - 20;
+
+  aggData.forEach((d, i) => {
+    const y = i * 80 + 20;
+    const barW = (d.avgPct / 100) * maxBarW;
+    const color = d.avgPct < 60 ? "#E53E3E" : (d.avgPct < 80 ? "#D69E2E" : "#38A169");
+
+    // Label Text (Aligned Right)
+    const words = d.name.split(" ");
+    const line1 = words.slice(0, 3).join(" ");
+    const line2 = words.slice(3).join(" ");
+    
+    // Position text on the right side
+    svg.innerHTML += `<text x="${W-5}" y="${y+10}" text-anchor="end" font-size="11" font-weight="700" fill="#4A5568">${line1}</text>`;
+    if(line2) svg.innerHTML += `<text x="${W-5}" y="${y+24}" text-anchor="end" font-size="11" font-weight="700" fill="#4A5568">${line2}</text>`;
+    
+    // Bar Background (Left side)
+    svg.innerHTML += `<rect x="${barStart}" y="${y+35}" width="${maxBarW}" height="12" fill="#EDF2F7" rx="4"/>`;
+    // Bar Fill
+    svg.innerHTML += `<rect x="${barStart}" y="${y+35}" width="${barW}" height="12" fill="${color}" rx="4"/>`;
+    // Value
+    svg.innerHTML += `<text x="${barStart+barW+5}" y="${y+45}" font-size="10" font-weight="800" fill="${color}">${Math.round(d.avgPct)}%</text>`;
+  });
+}
+
+init();
+</script>
+</body>
+</html>
