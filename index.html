@@ -125,11 +125,29 @@
       margin-top: 10px; padding: 10px; border-radius: 12px; 
       background: #fff; border: 1px solid #F7FAFC; 
       display: flex; align-items: center; justify-content: center;
-      overflow: hidden; /* يضمن عدم خروج الرسم */
+      overflow: hidden; 
     }
     svg{ overflow: visible; width: 100%; height: auto; display: block; }
     .hidden{ display: none; }
     .filters-row{ display: flex; gap: 10px; margin-bottom: 15px; }
+
+    /* New Styling for Risks & Value Added */
+    .risks-box{
+      background: #FFF5F5; border: 1px solid #FED7D7; padding: 15px; border-radius: 8px; margin-top: 15px;
+    }
+    .risk-item{ display: flex; gap: 8px; margin-bottom: 6px; font-size: 12px; color: #C53030; align-items: flex-start; font-weight: 600; }
+
+    /* Value Added Box (New) */
+    .value-added-box {
+      background: #F0FDF4; /* Light Green */
+      border: 1px solid #BBF7D0;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+    }
+    .va-item {
+      display: flex; gap: 8px; margin-bottom: 6px; font-size: 12px; color: #15803D; align-items: flex-start; font-weight: 700;
+    }
 
   </style>
 </head>
@@ -175,18 +193,26 @@
 
         <div class="axes-list" id="axesList"></div>
         
-        <div style="background:#FFF5F5; border:1px solid #FED7D7; padding:15px; border-radius:8px;">
+        <!-- Risks Box (Shows for low scores) -->
+        <div id="risksBox" class="risks-box hidden">
           <h4 style="margin:0 0 10px; font-size:13px; color:#C53030">أبرز المخاطر المحتملة:</h4>
-          <div id="risksList" style="font-size:12px; color:#C53030; font-weight:600"></div>
+          <div id="risksList"></div>
         </div>
+
+        <!-- Value Added Box (Shows for Healthy/Ideal) -->
+        <div id="valueAddedBox" class="value-added-box hidden">
+          <h4 style="margin:0 0 10px; font-size:13px; color:#15803D">القيمة المضافة المتحققة:</h4>
+          <div id="valueAddedList"></div>
+        </div>
+
       </div>
 
       <!-- Left Panel -->
       <div class="card">
         <h3>خريطة المحاور <span style="font-size:12px; font-weight:500; color:var(--muted)">الأداء التفصيلي</span></h3>
-        <!-- Increased ViewBox Height to fix clipping -->
-        <div class="chart-box" style="height:400px;">
-          <svg id="radarChart" viewBox="0 0 550 400"></svg>
+        <div class="chart-box" style="height:420px;">
+          <!-- SVG forced to LTR to handle coordinates correctly -->
+          <svg id="radarChart" viewBox="0 0 550 400" style="direction:ltr"></svg>
         </div>
 
         <h3 style="margin-top:30px">أبرز التوصيات <span style="font-size:12px; font-weight:500; color:var(--muted)">حسب الأولوية</span></h3>
@@ -213,14 +239,14 @@
       <div class="card">
         <h3>المقارنة المرجعية (Radar)</h3>
         <div class="chart-box" style="height:400px;">
-          <svg id="compRadar" viewBox="0 0 550 400"></svg>
+          <svg id="compRadar" viewBox="0 0 550 400" style="direction:ltr"></svg>
         </div>
       </div>
 
       <div class="card">
         <h3>تحليل الفجوات (Gap Analysis)</h3>
         <div class="chart-box" style="height:400px;">
-          <svg id="gapLineChart" viewBox="0 0 550 350"></svg>
+          <svg id="gapLineChart" viewBox="0 0 550 350" style="direction:ltr"></svg>
         </div>
       </div>
 
@@ -268,9 +294,8 @@
         </div>
 
         <h3 id="mainChartTitle">ترتيب الجهات (الأعلى أداءً)</h3>
-        <!-- Adjusted padding for vertical bars -->
         <div class="chart-box" style="height:450px; align-items:flex-end; padding-bottom:50px;">
-          <svg id="mainDashChart" viewBox="0 0 750 400"></svg>
+          <svg id="mainDashChart" viewBox="0 0 750 420" style="direction:ltr"></svg>
         </div>
       </div>
 
@@ -278,7 +303,8 @@
         <h3>أكثر المحاور انخفاضاً <span style="font-size:12px; font-weight:500; color:var(--muted)">Top Gaps</span></h3>
         <p style="font-size:12px; color:var(--muted); margin-bottom:15px">توضح المحاور التي تحتاج لتحسين عاجل.</p>
         <div class="chart-box" style="height:450px;">
-          <svg id="lowestAxesChart" viewBox="0 0 350 450"></svg>
+          <!-- SVG Forced LTR to ensure text-anchor works based on X coords correctly -->
+          <svg id="lowestAxesChart" viewBox="0 0 600 450" style="direction:ltr"></svg>
         </div>
         
         <div style="margin-top:20px; border-top:1px dashed #E2E8F0; padding-top:10px;">
@@ -319,12 +345,29 @@ const DATA = [
     decision: "الحفاظ على المكتسبات، تعزيز قنوات الإبلاغ الآمن، وتوسيع البرامج لتشمل العائلات.",
     risks: ["ضعف نسبي في محور الأمان (6/10)", "تحديات استدامة البرامج"],
     recs: [{prio:"تحسين", txt:"تعزيز الإبلاغ الآمن"}, {prio:"تطوير", txt:"برامج الفحص المبكر"}],
+    valueAdded: [
+      "زيادة الإنتاجية",
+      "انخفاض معدلات التغيب والاستقالات",
+      "تحسين الرضا الوظيفي",
+      "جذب المواهب المتميزة وتعزيز سمعة الشركة",
+      "خفض التكاليف الصحية",
+      "تعزيز الانتماء والولاء",
+      "تحسين التفاعل بين الفرق"
+    ],
     history: [70, 75, 78]
   },
   { id: "C", name: "Hospital Z", sector: "Healthcare", region: "Riyadh", size: "Large", scores: [20, 9, 14, 25, 16], total: 84, history: [80, 82, 84] },
   { id: "D", name: "Factory X", sector: "Industrial", region: "Eastern", size: "Large", scores: [12, 5, 8, 15, 8], total: 48, history: [45, 46, 48] },
   { id: "E", name: "Edu School Y", sector: "Education", region: "Jeddah", size: "Medium", scores: [18, 8, 12, 22, 14], total: 74, history: [60, 68, 74] },
-  { id: "F", name: "Bank K", sector: "Finance", region: "Riyadh", size: "Large", scores: [24, 9, 13, 28, 19], total: 93, history: [88, 90, 93] },
+  { 
+    id: "F", name: "Bank K", sector: "Finance", region: "Riyadh", size: "Large", 
+    scores: [24, 9, 13, 28, 19], total: 93, history: [88, 90, 93],
+    valueAdded: [
+      "بيئة عمل مثالية ومحفزة للإبداع",
+      "معدلات استبقاء عالية جداً",
+      "سمعة مؤسسية رائدة في القطاع"
+    ]
+  },
 ];
 
 const getStatus = (score) => {
@@ -391,9 +434,31 @@ function renderResults(){
       </div>`;
   });
 
-  const rList = document.getElementById("risksList");
-  rList.innerHTML = "";
-  (ent.risks || []).forEach(r => rList.innerHTML += `<div>• ${r}</div>`);
+  // Risks (Show if total < 60 or specific risks exist, hide if healthy/ideal typically, but show if explicit)
+  const risksBox = document.getElementById("risksBox");
+  const risksList = document.getElementById("risksList");
+  risksList.innerHTML = "";
+  
+  if (ent.total < 60 || (ent.risks && ent.risks.length > 0)) {
+    risksBox.classList.remove("hidden");
+    (ent.risks || []).forEach(r => risksList.innerHTML += `<div class="risk-item"><span>⚠️</span> ${r}</div>`);
+  } else {
+    risksBox.classList.add("hidden");
+  }
+
+  // Value Added (Show for Healthy/Ideal)
+  const vaBox = document.getElementById("valueAddedBox");
+  const vaList = document.getElementById("valueAddedList");
+  vaList.innerHTML = "";
+
+  if (ent.total >= 60 && ent.valueAdded && ent.valueAdded.length > 0) {
+    vaBox.classList.remove("hidden");
+    ent.valueAdded.forEach(v => {
+      vaList.innerHTML += `<div class="va-item"><span>💎</span> ${v}</div>`;
+    });
+  } else {
+    vaBox.classList.add("hidden");
+  }
 
   const recList = document.getElementById("recsList");
   recList.innerHTML = "";
@@ -405,7 +470,7 @@ function renderResults(){
       </div>`;
   });
 
-  drawRadar("radarChart", [ent], 1);
+  drawRadar("radarChart", [ent], 0.85); 
 }
 
 function renderCompare(){
@@ -414,7 +479,7 @@ function renderCompare(){
   const entA = DATA.find(d => d.id === idA);
   const entB = DATA.find(d => d.id === idB);
 
-  drawRadar("compRadar", [entA, entB], 0.9);
+  drawRadar("compRadar", [entA, entB], 0.85); 
   drawGapChart("gapLineChart", entA, entB);
 
   const tbody = document.getElementById("compTableBody");
@@ -507,9 +572,7 @@ function renderDash(){
 function drawRadar(svgId, entities, scale){
   const svg = document.getElementById(svgId);
   svg.innerHTML = "";
-  // Expanded ViewBox logic to prevent clipping
-  // cx, cy centered in 550x400
-  const cx = 275, cy = 180, r = 110 * scale;
+  const cx = 275, cy = 200, r = 110 * scale; 
   
   [0.2, 0.4, 0.6, 0.8, 1].forEach(p => {
     const pts = AXES.map((ax, i) => {
@@ -521,21 +584,20 @@ function drawRadar(svgId, entities, scale){
 
   AXES.forEach((ax, i) => {
     const ang = (Math.PI * 2 * i / 5) - Math.PI/2;
-    // Push labels further out
-    const lx = cx + (r+40)*Math.cos(ang);
-    const ly = cy + (r+40)*Math.sin(ang);
+    const lx = cx + (r+35)*Math.cos(ang);
+    const ly = cy + (r+35)*Math.sin(ang);
     const anchor = lx > cx ? "start" : (lx < cx ? "end" : "middle");
     
     const words = ax.name.split(" ");
     const line1 = words.slice(0, Math.ceil(words.length/2)).join(" ");
     const line2 = words.slice(Math.ceil(words.length/2)).join(" ");
     
-    // Adjust label Y if at bottom (index 2 or 3 mostly) to avoid clipping
-    let yOffset = 0;
-    if(i === 2 || i === 3) yOffset = 5;
+    let yAdj = 0;
+    if(i === 0) yAdj = -15; 
+    if(i === 2 || i === 3) yAdj = 15; 
 
-    svg.innerHTML += `<text x="${lx}" y="${ly-5+yOffset}" text-anchor="${anchor}" font-size="11" fill="#4A5568" font-weight="700">${line1}</text>`;
-    if(line2) svg.innerHTML += `<text x="${lx}" y="${ly+8+yOffset}" text-anchor="${anchor}" font-size="11" fill="#4A5568" font-weight="700">${line2}</text>`;
+    svg.innerHTML += `<text x="${lx}" y="${ly-5+yAdj}" text-anchor="${anchor}" font-size="11" fill="#4A5568" font-weight="700">${line1}</text>`;
+    if(line2) svg.innerHTML += `<text x="${lx}" y="${ly+8+yAdj}" text-anchor="${anchor}" font-size="11" fill="#4A5568" font-weight="700">${line2}</text>`;
     
     const x = cx + r*Math.cos(ang);
     const y = cy + r*Math.sin(ang);
@@ -567,7 +629,6 @@ function drawGapChart(svgId, entA, entB){
   AXES.forEach((ax, i) => {
     const x = pad + i*step;
     const words = ax.name.split(" ");
-    // Multi-line support
     svg.innerHTML += `<text x="${x}" y="${H-25}" text-anchor="middle" font-size="9" fill="#718096">${words[0]} ${words[1]||""}</text>`;
     if(words[2]) svg.innerHTML += `<text x="${x}" y="${H-15}" text-anchor="middle" font-size="9" fill="#718096">${words.slice(2).join(" ")}</text>`;
   });
@@ -588,7 +649,6 @@ function drawGapChart(svgId, entA, entB){
     svg.innerHTML += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2"/>`;
   });
 
-  // Legend
   svg.innerHTML += `<rect x="${W-100}" y="20" width="10" height="10" fill="${colorA}"/>`;
   svg.innerHTML += `<text x="${W-85}" y="28" font-size="10" fill="#555">${entA.name}</text>`;
   svg.innerHTML += `<rect x="${W-100}" y="40" width="10" height="10" fill="${colorB}"/>`;
@@ -597,10 +657,9 @@ function drawGapChart(svgId, entA, entB){
 
 function drawColumnChart(svg, data){
   svg.innerHTML = "";
-  // Increased height in CSS and ViewBox
-  const W = 750, H = 400;
-  const padL = 50, padB = 90; // Large bottom padding for text
-  const padT = 40; // Top padding to prevent clipping
+  const W = 750, H = 420;
+  const padL = 50, padB = 100; 
+  const padT = 50; 
   const availW = W - padL - 20;
   const colW = Math.min(50, (availW / data.length) - 15);
   
@@ -610,15 +669,14 @@ function drawColumnChart(svg, data){
     const y = H - padB - barHeight;
     
     svg.innerHTML += `<rect x="${x}" y="${y}" width="${colW}" height="${barHeight}" fill="${d.color}" rx="4"/>`;
-    svg.innerHTML += `<text x="${x + colW/2}" y="${y-5}" text-anchor="middle" font-size="11" font-weight="700" fill="#2D3748">${d.value}</text>`;
-    // Rotated Label
-    svg.innerHTML += `<text x="${x + colW/2}" y="${H-padB+15}" text-anchor="end" font-size="11" fill="#4A5568" transform="rotate(-45, ${x + colW/2}, ${H-padB+15})">${d.label}</text>`;
+    svg.innerHTML += `<text x="${x + colW/2}" y="${y-8}" text-anchor="middle" font-size="12" font-weight="800" fill="#2D3748">${d.value}</text>`;
+    svg.innerHTML += `<text x="${x + colW/2}" y="${H-padB+20}" text-anchor="end" font-size="12" font-weight="600" fill="#4A5568" transform="rotate(-45, ${x + colW/2}, ${H-padB+20})">${d.label}</text>`;
   });
 }
 
 function drawTrendChart(svg, list){
   svg.innerHTML = "";
-  const W = 750, H = 400, pad = 50;
+  const W = 750, H = 420, pad = 50;
   const colors = ["#805AD5", "#319795", "#DD6B20"];
   
   [0, 50, 100].forEach(v => {
@@ -648,31 +706,24 @@ function drawTrendChart(svg, list){
 function drawLowestAxesChart(svgId, aggData){
   const svg = document.getElementById(svgId);
   svg.innerHTML = "";
-  const W = 350, H = 450;
-  const labelSpace = 130; // Space reserved for text on right
-  const barStart = 10;
-  const maxBarW = W - labelSpace - 20;
-
+  const W = 600; 
+  const H = 450;
+  
   aggData.forEach((d, i) => {
-    const y = i * 80 + 20;
-    const barW = (d.avgPct / 100) * maxBarW;
+    const y = i * 85 + 40; 
+    
+    // Label
+    svg.innerHTML += `<text x="${W-10}" y="${y}" text-anchor="end" font-size="16" font-weight="700" fill="#2D3748" font-family="Tajawal">${d.name}</text>`;
+    
+    // Bar
+    const barW = (d.avgPct / 100) * (W - 100); 
     const color = d.avgPct < 60 ? "#E53E3E" : (d.avgPct < 80 ? "#D69E2E" : "#38A169");
-
-    // Label Text (Aligned Right)
-    const words = d.name.split(" ");
-    const line1 = words.slice(0, 3).join(" ");
-    const line2 = words.slice(3).join(" ");
     
-    // Position text on the right side
-    svg.innerHTML += `<text x="${W-5}" y="${y+10}" text-anchor="end" font-size="11" font-weight="700" fill="#4A5568">${line1}</text>`;
-    if(line2) svg.innerHTML += `<text x="${W-5}" y="${y+24}" text-anchor="end" font-size="11" font-weight="700" fill="#4A5568">${line2}</text>`;
+    svg.innerHTML += `<rect x="60" y="${y+15}" width="${W-80}" height="12" fill="#F1F5F9" rx="6"/>`;
+    svg.innerHTML += `<rect x="60" y="${y+15}" width="${barW}" height="12" fill="${color}" rx="6"/>`;
     
-    // Bar Background (Left side)
-    svg.innerHTML += `<rect x="${barStart}" y="${y+35}" width="${maxBarW}" height="12" fill="#EDF2F7" rx="4"/>`;
-    // Bar Fill
-    svg.innerHTML += `<rect x="${barStart}" y="${y+35}" width="${barW}" height="12" fill="${color}" rx="4"/>`;
     // Value
-    svg.innerHTML += `<text x="${barStart+barW+5}" y="${y+45}" font-size="10" font-weight="800" fill="${color}">${Math.round(d.avgPct)}%</text>`;
+    svg.innerHTML += `<text x="50" y="${y+26}" text-anchor="end" font-size="14" font-weight="800" fill="${color}">${Math.round(d.avgPct)}%</text>`;
   });
 }
 
